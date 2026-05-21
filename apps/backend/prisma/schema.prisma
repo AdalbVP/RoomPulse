@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ServiceStatus {
+  PREPARING
+  LIGHT
+  TRAY
+  CART
+  COMPLETED
+}
+
+model ServiceTicket {
+  id          String        @id @default(uuid())
+  roomNumber  Int
+  status      ServiceStatus @default(PREPARING)
+
+  createdAt   DateTime @default(now())
+  deliveredAt DateTime?
+  completedAt DateTime?
+
+  deletedAt   DateTime?
+
+  @@index([roomNumber])
+  @@index([status])
+}
