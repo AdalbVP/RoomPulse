@@ -13,16 +13,35 @@ type Props = {
   completeTicket: (id: string) => void
 }
 
-function getColor(status: string) {
+function getHeaderColor(status: string) {
   switch (status) {
     case "LIGHT":
-      return "#4CAF50"
+      return "#10B981"
+
     case "TRAY":
-      return "#FFC107"
+      return "#F59E0B"
+
     case "CART":
-      return "#F44336"
+      return "#EF4444"
+
     default:
-      return "#9E9E9E"
+      return "#9CA3AF"
+  }
+}
+
+function getStatusLabel(status: string) {
+  switch (status) {
+    case "LIGHT":
+      return "💡 LIGHT"
+
+    case "TRAY":
+      return "🍽️ TRAY"
+
+    case "CART":
+      return "🛒 CART"
+
+    default:
+      return "🧑‍🍳 PREPARING"
   }
 }
 
@@ -78,33 +97,81 @@ const canComplete =
   ticket.status === "TRAY" ||
   ticket.status === "CART"
 
+  let boxShadow = "none"
+  let animation = "none"
+
+  if (borderColor === "orange") {
+    boxShadow = "0 0 15px rgba(255,165,0,0.6)"
+  }
+
+  if (borderColor === "red") {
+    boxShadow = "0 0 20px rgba(255,0,0,0.8)"
+    animation = "pulseRed 1.8s infinite"
+  }
+
   return (
     <div
       style={{
-        backgroundColor: getColor(ticket.status),
+        backgroundColor: "#FFFFFF",
+
         border: `4px solid ${borderColor}`,
-        padding: "15px",
-        borderRadius: "10px",
-        color: "white",
-        fontWeight: "bold",
-        textAlign: "center"
+        boxShadow,
+        animation,
+        transition: "all 0.5s ease",
+        
+        borderRadius: "16px",
+        overflow: "hidden",
+
+        width: "100%",
+        boxSizing: "border-box"
       }}
     >
-      <div style={{ fontSize: "32px" }}>
-        {ticket.roomNumber}
-      </div>
 
-      <div>{ticket.status}</div>
+    <div
+      style={{
+        backgroundColor: getHeaderColor(ticket.status),
+        color: "white",
+        padding: "10px 16px",
+        fontSize: "14px",
+        fontWeight: "bold",
+        textAlign: "left"
+      }}
+    >
+      {getStatusLabel(ticket.status)}
+    </div>
 
-      <div style={{ fontSize: "14px", marginTop: "5px" }}>
+    <div
+      style={{
+      padding: "20px",
+      color: "#1F2937",
+      textAlign: "center"
+      }}
+    >
+
+    <div
+      style={{
+      fontSize: "42px",
+      fontWeight: "700"
+      }}
+    >
+      {ticket.roomNumber}
+    </div>
+
+      <div 
+        style={{
+        fontSize: "14px",
+        color: "#6B7280",
+        marginTop: "8px"
+        }}
+      >
         {getElapsedTime(ticket)}
       </div>
 
       <div
         style={{
-          marginTop: "10px",
+          marginTop: "16px",
           display: "flex",
-          gap: "5px",
+          gap: "10px",
           flexWrap: "wrap",
           justifyContent: "center"
         }}
@@ -114,7 +181,10 @@ const canComplete =
           disabled={!canSelectDelivery}
           style={{ 
             opacity: canSelectDelivery ? 1 : 0.4,
-            padding: "6px 10px",
+            padding: "12px 16px",
+            fontSize: "16px",
+            borderRadius: "10px",
+            minWidth: "90px",
             fontWeight: "bold"
           }}
           onClick={() => updateStatus(ticket.id, "LIGHT")}
@@ -124,7 +194,14 @@ const canComplete =
 
         <button
         disabled={!canSelectDelivery}
-        style={{ opacity: canSelectDelivery ? 1 : 0.4 }}
+        style={{ 
+          opacity: canSelectDelivery ? 1 : 0.4,
+          padding: "12px 16px",
+          fontSize: "16px",
+          borderRadius: "10px",
+          minWidth: "90px",
+          fontWeight: "bold"
+        }}
         onClick={() => updateStatus(ticket.id, "TRAY")}
       >
         TRAY
@@ -132,7 +209,14 @@ const canComplete =
 
         <button
           disabled={!canSelectDelivery}
-          style={{ opacity: canSelectDelivery ? 1 : 0.4 }}
+          style={{ 
+            opacity: canSelectDelivery ? 1 : 0.4,
+            padding: "12px 16px",
+            fontSize: "16px",
+            borderRadius: "10px",
+            minWidth: "90px",
+            fontWeight: "bold"
+          }}
           onClick={() => updateStatus(ticket.id, "CART")}
         >
           CART
@@ -140,13 +224,21 @@ const canComplete =
 
         <button
           disabled={!canComplete}
-          style={{ opacity: canComplete ? 1 : 0.4 }}
+          style={{ 
+            opacity: canComplete ? 1 : 0.4,
+            padding: "12px 16px",
+            fontSize: "16px",
+            borderRadius: "10px",
+            minWidth: "90px",
+            fontWeight: "bold"
+          }}
           onClick={() => completeTicket(ticket.id)}
         >
           DONE
         </button>
 
       </div>
+    </div>
     </div>
   )
 }
