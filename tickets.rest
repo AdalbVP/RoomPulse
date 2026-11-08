@@ -1,0 +1,85 @@
+# Manual tests for the error handling + validation step (VS Code "REST Client" extension)
+# Run the backend first: npm run dev (inside apps/backend)
+
+@baseUrl = http://localhost:3000
+# Paste a real id from the response of request 1
+@ticketId = PASTE_A_REAL_TICKET_ID_HERE
+
+### 1. Create ticket  -> 201 + ticket JSON
+POST {{baseUrl}}/tickets
+Content-Type: application/json
+
+{ "roomNumber": 101 }
+
+### 2. Missing body field  -> 400 VALIDATION_ERROR
+POST {{baseUrl}}/tickets
+Content-Type: application/json
+
+{}
+
+### 3. roomNumber is text  -> 400 VALIDATION_ERROR
+POST {{baseUrl}}/tickets
+Content-Type: application/json
+
+{ "roomNumber": "abc" }
+
+### 4. roomNumber is a decimal  -> 400 VALIDATION_ERROR
+POST {{baseUrl}}/tickets
+Content-Type: application/json
+
+{ "roomNumber": 101.5 }
+
+### 5. roomNumber out of range (0)  -> 400 VALIDATION_ERROR
+POST {{baseUrl}}/tickets
+Content-Type: application/json
+
+{ "roomNumber": 0 }
+
+### 6. roomNumber out of range (10000)  -> 400 VALIDATION_ERROR
+POST {{baseUrl}}/tickets
+Content-Type: application/json
+
+{ "roomNumber": 10000 }
+
+### 7. Broken JSON  -> 400 INVALID_JSON
+POST {{baseUrl}}/tickets
+Content-Type: application/json
+
+{ "roomNumber": 101,
+
+### 8. List active tickets  -> 200
+GET {{baseUrl}}/tickets/active
+
+### 9. Valid status change  -> 200 (the UI should update live)
+PATCH {{baseUrl}}/tickets/{{ticketId}}/status
+Content-Type: application/json
+
+{ "status": "LIGHT" }
+
+### 10. Invalid status value  -> 400 VALIDATION_ERROR
+PATCH {{baseUrl}}/tickets/{{ticketId}}/status
+Content-Type: application/json
+
+{ "status": "FLYING" }
+
+### 11. id is not a UUID  -> 400 VALIDATION_ERROR
+PATCH {{baseUrl}}/tickets/not-a-uuid/status
+Content-Type: application/json
+
+{ "status": "LIGHT" }
+
+### 12. Valid UUID that does not exist (status)  -> 404 NOT_FOUND
+PATCH {{baseUrl}}/tickets/11111111-1111-4111-8111-111111111111/status
+Content-Type: application/json
+
+{ "status": "LIGHT" }
+
+### 13. Valid UUID that does not exist (complete)  -> 404 NOT_FOUND
+# This one depends on Prisma's P2025 mapping: if you get 500 here, tell me.
+PATCH {{baseUrl}}/tickets/11111111-1111-4111-8111-111111111111/complete
+
+### 14. Complete a real ticket  -> 200
+PATCH {{baseUrl}}/tickets/{{ticketId}}/complete
+
+### 15. Unknown route  -> 404 ROUTE_NOT_FOUND
+GET {{baseUrl}}/nope

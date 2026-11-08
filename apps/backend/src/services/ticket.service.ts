@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { ServiceStatus } from "@prisma/client";
+import { NotFoundError } from "../errors/AppError";
 
 export async function createTicket(roomNumber: number) {
   return prisma.serviceTicket.create({
@@ -27,7 +28,7 @@ export async function updateTicketStatus(id: string, status: ServiceStatus) {
   });
 
   if (!ticket) {
-    throw new Error("Ticket not found");
+    throw new NotFoundError("Ticket not found");
   }
 
   const data: any = {
@@ -44,6 +45,7 @@ export async function updateTicketStatus(id: string, status: ServiceStatus) {
   });
 }
 
+// A missing ticket makes Prisma throw P2025, which the error middleware maps to a 404.
 export async function completeTicket(id: string) {
   return prisma.serviceTicket.update({
     where: {
