@@ -4,7 +4,13 @@ import { ServiceStatus } from "@prisma/client"
 export const ROOM_NUMBER_MIN = 1
 export const ROOM_NUMBER_MAX = 9999
 
-const statuses = Object.values(ServiceStatus) as [ServiceStatus, ...ServiceStatus[]]
+// /status only chooses HOW a ticket is delivered.
+// PREPARING (initial state) and COMPLETED (set by /complete) are not valid targets here.
+const deliveryStatuses = [
+  ServiceStatus.LIGHT,
+  ServiceStatus.TRAY,
+  ServiceStatus.CART,
+] as const
 
 export const createTicketSchema = z.object({
   roomNumber: z
@@ -19,5 +25,5 @@ export const ticketIdParamsSchema = z.object({
 })
 
 export const updateStatusSchema = z.object({
-  status: z.enum(statuses),
+  status: z.enum(deliveryStatuses),
 })
