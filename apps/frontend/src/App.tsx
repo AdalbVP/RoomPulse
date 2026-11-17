@@ -1,81 +1,26 @@
-import { io } from "socket.io-client"
-import { useEffect, useState } from "react"
 import TicketCard from "./components/TicketCard"
 import CreateTicket from "./components/CreateTicket"
+import { useTickets } from "./hooks/useTickets"
+import type { Ticket } from "./types"
 
-const socket = io("http://localhost:3000")
-
-type Ticket = {
-  id: string
-  roomNumber: number
-  status: string
-  createdAt: string
-  deliveredAt: string | null
-  completedAt: string | null
-}
+const bannerStyle = {
+  padding: "12px 16px",
+  borderRadius: "12px",
+  marginBottom: "16px",
+  fontSize: "14px",
+  fontWeight: 600
+} as const
 
 function App() {
-  const [tickets, setTickets] = useState<Ticket[]>([])
-  const [, setTick] = useState(0)
-
-  // cargar tickets al iniciar
-  useEffect(() => {
-    fetch("http://localhost:3000/tickets/active")
-      .then(res => res.json())
-      .then(data => setTickets(data))
-  }, [])
-
-  // timer para actualizar el tiempo
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTick(t => t + 1)
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  // eventos de socket (tiempo real)
-  useEffect(() => {
-
-    socket.on("ticketCreated", ticket => {
-      setTickets(prev => [...prev, ticket])
-    })
-
-    socket.on("ticketUpdated", updatedTicket => {
-      setTickets(prev =>
-        prev.map(t => (t.id === updatedTicket.id ? updatedTicket : t))
-      )
-    })
-
-    socket.on("ticketCompleted", completedTicket => {
-      setTickets(prev =>
-        prev.filter(t => t.id !== completedTicket.id)
-      )
-    })
-
-    return () => {
-      socket.off("ticketCreated")
-      socket.off("ticketUpdated")
-      socket.off("ticketCompleted")
-    }
-
-  }, [])
-
-  async function updateStatus(id: string, status: string) {
-    await fetch(`http://localhost:3000/tickets/${id}/status`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ status })
-    })
-  }
-
-  async function completeTicket(id: string) {
-    await fetch(`http://localhost:3000/tickets/${id}/complete`, {
-      method: "PATCH"
-    })
-  }
+  const {
+    tickets,
+    now,
+    connected,
+    error,
+    dismissError,
+    updateStatus,
+    completeTicket
+  } = useTickets()
 
 const sortByOldest = (a: Ticket, b: Ticket) =>
   new Date(a.createdAt).getTime() -
@@ -118,6 +63,52 @@ const cartTickets = tickets
           RoomPulse
         </h1>
       
+      {!connected && (
+        <div
+          role="status"
+          style={{
+            ...bannerStyle,
+            backgroundColor: "#FEF3C7",
+            color: "#92400E",
+            border: "1px solid #FCD34D"
+          }}
+        >
+          Connection lost. Reconnecting... Tickets may be out of date.
+        </div>
+      )}
+
+      {error && (
+        <div
+          role="alert"
+          style={{
+            ...bannerStyle,
+            backgroundColor: "#FEE2E2",
+            color: "#991B1B",
+            border: "1px solid #FCA5A5",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "12px"
+          }}
+        >
+          <span>{error}</span>
+
+          <button
+            onClick={dismissError}
+            aria-label="Dismiss error"
+            style={{
+              background: "none",
+              border: "none",
+              color: "inherit",
+              fontSize: "20px",
+              cursor: "pointer"
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <CreateTicket />
 
       <div
@@ -169,6 +160,7 @@ const cartTickets = tickets
             ticket={ticket}
             updateStatus={updateStatus}
             completeTicket={completeTicket}
+            now={now}
           />
         ))}
       </div>
@@ -212,6 +204,7 @@ const cartTickets = tickets
         ticket={ticket}
         updateStatus={updateStatus}
         completeTicket={completeTicket}
+        now={now}
       />
     ))}
   </div>
@@ -254,6 +247,7 @@ const cartTickets = tickets
         ticket={ticket}
         updateStatus={updateStatus}
         completeTicket={completeTicket}
+        now={now}
       />
     ))}
   </div>
@@ -296,6 +290,7 @@ const cartTickets = tickets
         ticket={ticket}
         updateStatus={updateStatus}
         completeTicket={completeTicket}
+        now={now}
       />
     ))}
   </div>

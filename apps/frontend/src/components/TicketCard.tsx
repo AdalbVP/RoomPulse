@@ -1,15 +1,9 @@
-type Ticket = {
-  id: string
-  roomNumber: number
-  status: string
-  createdAt: string
-  deliveredAt: string | null
-  completedAt: string | null
-}
+import type { DeliveryStatus, Ticket } from "../types"
 
 type Props = {
   ticket: Ticket
-  updateStatus: (id: string, status: string) => void
+  now: number // current time in ms, already aligned with the server's clock
+  updateStatus: (id: string, status: DeliveryStatus) => void
   completeTicket: (id: string) => void
 }
 
@@ -45,7 +39,7 @@ function getStatusLabel(status: string) {
   }
 }
 
-function getElapsedTime(ticket: Ticket) {
+function getElapsedTime(ticket: Ticket, now: number) {
 
   let startTime = ticket.createdAt
 
@@ -54,9 +48,8 @@ function getElapsedTime(ticket: Ticket) {
   }
 
   const start = new Date(startTime).getTime()
-  const now = new Date().getTime()
 
-  const diff = Math.floor((now - start) / 1000)
+  const diff = Math.max(0, Math.floor((now - start) / 1000))
 
   const minutes = Math.floor(diff / 60)
   const seconds = diff % 60
@@ -64,7 +57,7 @@ function getElapsedTime(ticket: Ticket) {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`
 }
 
-function getElapsedMinutes(ticket: Ticket) {
+function getElapsedMinutes(ticket: Ticket, now: number) {
 
   let startTime = ticket.createdAt
 
@@ -73,16 +66,15 @@ function getElapsedMinutes(ticket: Ticket) {
   }
 
   const start = new Date(startTime).getTime()
-  const now = new Date().getTime()
 
-  const diff = Math.floor((now - start) / 1000)
+  const diff = Math.max(0, Math.floor((now - start) / 1000))
 
   return Math.floor(diff / 60)
 }
 
-export default function TicketCard({ ticket, updateStatus, completeTicket }: Props) {
+export default function TicketCard({ ticket, now, updateStatus, completeTicket }: Props) {
 
-  const minutes = getElapsedMinutes (ticket)
+  const minutes = getElapsedMinutes(ticket, now)
 
   let borderColor = "#E5E7EB"
 
@@ -178,7 +170,7 @@ const canComplete =
         marginTop: "8px"
         }}
       >
-        {getElapsedTime(ticket)}
+        {getElapsedTime(ticket, now)}
       </div>
 
       <div

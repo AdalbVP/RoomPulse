@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { createTicket } from "../services/api"
 
 type Props = {
   onCreated?: () => void
@@ -7,26 +8,33 @@ type Props = {
 export default function CreateTicket({ onCreated }: Props) {
   const [roomNumber, setRoomNumber] = useState("")
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleCreate() {
     if (!roomNumber) return
 
+    const number = Number(roomNumber)
+
+    if (!Number.isInteger(number)) {
+      setError("Room number must be a whole number")
+      return
+    }
+
     setLoading(true)
+    setError(null)
 
-    await fetch("http://localhost:3000/tickets", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        roomNumber: Number(roomNumber)
-      })
-    })
+    try {
+      await createTicket(number)
 
-    setRoomNumber("")
-    setLoading(false)
+      setRoomNumber("")
 
-    if (onCreated) onCreated()
+      if (onCreated) onCreated()
+    } catch (err) {
+      // The server has the final word (for example the allowed room range)
+      setError(err instanceof Error ? err.message : "Something went wrong")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -37,6 +45,7 @@ export default function CreateTicket({ onCreated }: Props) {
         border: "1px solid #ccc",
         borderRadius: "10px",
         display: "flex",
+        flexWrap: "wrap",
         gap: "10px",
         alignItems: "center"
       }}
@@ -53,6 +62,12 @@ export default function CreateTicket({ onCreated }: Props) {
       <button onClick={handleCreate} disabled={loading || !roomNumber}>
         {loading ? "Creating..." : "Create Ticket"}
       </button>
+
+      {error && (
+        <span role="alert" style={{ color: "#B91C1C", fontSize: "14px" }}>
+          {error}
+        </span>
+      )}
     </div>
   )
 }
