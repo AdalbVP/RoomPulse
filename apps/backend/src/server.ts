@@ -1,3 +1,4 @@
+import { config } from "./config"
 import express from "express"
 import http from "http"
 import ticketRoutes from "./routes/ticket.routes"
@@ -7,7 +8,7 @@ import { errorHandler, notFoundHandler } from "./middlewares/errorHandler"
 
 const app = express()
 
-app.use(cors())
+app.use(cors({ origin: config.corsOrigin }))
 
 app.use(express.json())
 app.use("/tickets", ticketRoutes)
@@ -21,12 +22,10 @@ app.get("/time", (_req, res) => {
 app.use(notFoundHandler)
 app.use(errorHandler)
 
-const PORT = 3000
-
 const server = http.createServer(app)
 
 initSocket(server)
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+server.listen(config.port, () => {
+  console.log(`Server running on port ${config.port}`)
 })
